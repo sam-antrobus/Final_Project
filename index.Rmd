@@ -1,0 +1,91 @@
+---
+title: "Final Project"
+author: "Sam Antrobus"
+date: "12/05/2020"
+output: html_document
+---
+
+```{r echo = FALSE, include=FALSE} 
+library(tidyverse) ##load the tidyverse library version 1.3.0
+``` 
+
+
+## Data Origins 
+The data I am using for this project comes from a study called **Hidden advantages and disadvantages of social class: how classroom settings reproduce social inequality by staging unfair comparisons** by *Sébastien Goudeau* and *Jean-Claude Croizet*, which was published in *Psychological Science* in 2009 [link](https://journals-sagepub-com.sheffield.idm.oclc.org/doi/full/10.1177/0956797616676600). This study uses 935 students across 40 classes in 8 schools, with a mean age of 11.5. The paper consists of 3 studies, though I will be using the data from study 1 in this paper. In study 1, the researchers investigated whether differences in performance between upper, middle and lower class students would be affected by making these differences visible. This was manipulated by having a condition in which students were told to raise their hand once they had finished a reading and comprehension task, and compared this to another group of students who were not told to raise their hand and were unaware of any differences. I will be using the variables of class, which is represented as a rating from 1-3 based on the student's parents' occupation - 1 being lower class and 3 being upper class, context, which is whether they were in the hand raising (score of 1) or non hand raising (score of -1) groups, and performance on the comprehension task, shortened to 'PERF' in the data column, which is a score between 1 and 20. The raw dataset also includes gender (-1 = girl, 1 = boy) and father's and mother's occupations which were rated 1-3 from low class to upper class, but these variables will not be included in this project.  
+
+```{r}
+filename <- '/Users/samantrobus/Desktop/project_data.csv' ##load the data and print the first 10 lines 
+raw_data <- read.csv(filename)
+head(raw_data, 10)
+```
+
+##Research Questions 
+My visualisations will look at the mean performance scores across lower, middle and upper class students for both the non hand raising condition that does not make differences visible and the hand raising condition that makes performance differences visible. From this, I will be able to visualise any differences that may be present between the two groups to see whether making differences in ability visible to students affects their performance, and whether the effect that this has changes as a function of their social class.
+
+##Data Preparation
+
+The first step of preparing this data is to remove the variables I won't be using in my visualisations. 
+I then subset the data on the variable of context into 2 subsets so that I can use the data from the two different conditions separately 
+
+```{r}
+raw_data <- raw_data[ -c(1,2,4,5)] ##removing the columns of data with variables I don't need 
+head(raw_data, 10)
+```
+
+
+```{r}
+ ##subset the data into the hand raising and none hand raising conditions to look at the two conditions separately
+
+visible <- subset(raw_data,CONTEXT==1)   
+not_visible <- subset(raw_data, CONTEXT==-1)
+head(visible, 10)
+head(not_visible, 10)
+```
+
+Then with the two subsets I group the data by class and create summary statistics. 
+
+```{r}
+    ## group the data into lower, middle and upper class and produce the mean, standard deviation and standard    error for each group 
+
+  library(dplyr)     
+visiblestats <- visible %>%
+   group_by(CLASS) %>%
+   dplyr::summarise(mean_performance = mean(PERF), sd_performance = sd(PERF), se_performance = (sd_performance/sqrt(476)))
+  
+ not_visiblestats <- not_visible %>%
+   group_by(CLASS) %>%
+   dplyr::summarise(mean_performance = mean(PERF), sd_performance = sd(PERF), se_performance = (sd_performance/sqrt(459)))
+  not_visiblestats
+  visiblestats
+ 
+```
+  
+##Visualisations 
+  
+```{r}
+## create bar plots for each condition showing the mean test performance for each social class with error bars for standard error 
+lower_colour<-"red"
+middle_colour<-"blue"
+upper_colour<-"green"
+ggplot(not_visiblestats, aes(x = CLASS, y = mean_performance)) +
+ggtitle('Test performance when differences not visible') +
+geom_bar(stat = "identity", colour = "black", fill = c(lower_colour, middle_colour, upper_colour), position = "dodge") + 
+geom_errorbar(aes(ymin=mean_performance-se_performance, ymax= mean_performance+se_performance), width = .2) +
+labs(x= "Class", y = " Mean Test Performance") 
+
+
+ggplot(visiblestats, aes(x = CLASS, y = mean_performance)) +
+ggtitle('Test performances when differences visible') +
+geom_bar(stat = "identity", colour = "black", fill = c(lower_colour, middle_colour, upper_colour), position = "dodge") + 
+geom_errorbar(aes(ymin=mean_performance-se_performance, ymax= mean_performance+se_performance), width = .2) +
+labs(x= "Class", y = " Mean Test Performance") 
+
+
+```
+
+These plots demonstrate the difference between the hand raising and no hand raising conditions. There is a clearly visible change in the differences between mean test performances across lower, middle and upper class students. The differences in mean test performance between lower and upper class students are exaggerated when differences in ability are made visible, decreasing the mean score for lower class students and increasing the score for upper class students, whilst not having an effect on the mean scores of middle class students. 
+
+##Summary
+
+In this module I have learnt how to manage and manipulate data in R and be able to use the data to create visulations. I had no experience with managing data through coding before this module and now I feel comfortable doing the sort of data management and visualisation with code that i have done in this project. If I were to have more time I would have liked to create visualisations for all 3 of the studies in the Goudeau and Croizet (2009) paper and look further at the effects that class has on performance, and with more experience I would have liked to create some more interesting interactive visualisations. 
+
